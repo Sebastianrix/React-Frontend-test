@@ -155,38 +155,42 @@
 //export default App;
 
 
-import { useState } from "react";
+//import { useState } from "react";
 
-function App() {
-    const [counter, setCounter] = useState(""); // State to store the API response
-    let value1 = 5;
-    let value2 = "6";
-    const handleButtonClick = () => {
-        // Call the API
-        fetch("https://official-joke-api.appspot.com/jokes/random")
-            .then((response) => response.json()) // Parse the JSON response
-            .then((data) => {
-                setCounter(`${data.setup} - ${data.punchline}`); // Update the state with the joke
-            })
-            .catch((error) => {
-                console.error("Error fetching the joke:", error);
-                setCounter("Failed to fetch joke");
-            });
-    };
+//function App() {
+//    const [counter, setCounter] = useState(""); // State to store the API response
+//    let value1 = 5;
+//    let value2 = "5";
+//    const handleButtonClick = () => {
+//        // Call the API
+//        fetch("https://official-joke-api.appspot.com/jokes/random")
+//            .then((response) => response.json()) // Parse the JSON response
+//            .then((data) => {
+//                setCounter(`${data.setup} - ${data.punchline}`); // Update the state with the joke
+//            })
+//            .catch((error) => {
+//                console.error("Error fetching the joke:", error);
+//                setCounter("Failed to fetch joke");
+//            });
+//    };
 
-    return (
-        <div>
-            <button onClick={handleButtonClick}>
-                Click please
-            </button>
-            <p>{counter}</p>
-            <p>{value1+value2}</p>
-            <p>Type of counter: {typeof counter}</p> {/* Displaying the type of 'counter' */}
-        </div>
-    );
-}
+//    return (
+//        <div>
+//            <button onClick={handleButtonClick}>
+//                Click please
+//            </button>
+//            <p>{counter}</p>
+//            <p>Forged string : {value1 + value2}</p>
+//            <p>Adding values : {"5" +  5 }</p>
+//            <p>Adding values : {"5" + "5"}</p>
+//            <p>Adding values : { 5  + "5"}</p>
+//            <p>Adding values : { 5  +  5 }</p>
+//            <p>Type of counter: {typeof counter}</p> {/* Displaying the type of 'counter' */}
+//        </div>
+//    );
+//}
 
-export default App;
+//export default App;
 
 
 
@@ -213,4 +217,78 @@ export default App;
 
 //export default App;
 
+import { useState } from "react";
+
+function App() {
+    const [search, setSearch] = useState(""); // State for the search input
+    const [actorImage, setActorImage] = useState(""); // State for the actor's image
+    const [error, setError] = useState(""); // State for error messages
+
+    const API_KEY = "003b3d8750e2856a2fc6e6414311d7eb";
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+
+        // Check if search input is empty
+        if (!search.trim()) {
+            setError("Please enter a valid actor name.");
+            setActorImage(""); // Clear previous image
+            return;
+        }
+
+        setError(""); // Clear any previous errors
+
+        // Call the TMDb API
+        fetch(`https://api.themoviedb.org/3/search/person?query=${search}&api_key=${API_KEY}`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch data from the API.");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                // Check if there are any results
+                if (data.results && data.results.length > 0) {
+                    const actor = data.results[0]; // Get the first actor from results
+                    if (actor.profile_path) {
+                        // Construct the image URL
+                        const imageUrl = `https://image.tmdb.org/t/p/w500${actor.profile_path}`;
+                        setActorImage(imageUrl);
+                    } else {
+                        setError("No image available for this actor.");
+                        setActorImage(""); // Clear previous image
+                    }
+                } else {
+                    setError("No actor found with that name.");
+                    setActorImage(""); // Clear previous image
+                }
+            })
+            .catch((err) => {
+                setError("An error occurred while fetching data.");
+                console.error(err);
+            });
+    };
+
+    return (
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
+            <h1>Actor Search</h1>
+            <form onSubmit={handleSearch} style={{ marginBottom: "20px" }}>
+                <input
+                    type="text"
+                    placeholder="Enter actor's name"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    style={{ padding: "10px", width: "300px" }}
+                />
+                <button type="submit" style={{ padding: "10px 20px", marginLeft: "10px" }}>
+                    Search
+                </button>
+            </form>
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            {actorImage && <img src={actorImage} alt="Actor" style={{ width: "200px", borderRadius: "10px" }} />}
+        </div>
+    );
+}
+
+export default App;
 

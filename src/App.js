@@ -221,52 +221,64 @@ import { useState } from "react";
 
 function App() {
     const [search, setSearch] = useState(""); // State for the search input
-    const [actorImage, setActorImage] = useState(""); // State for the actor's image
+    const [actorImages, setActorImages] = useState([]); // State for the actor's images
     const [error, setError] = useState(""); // State for error messages
 
     const API_KEY = "003b3d8750e2856a2fc6e6414311d7eb";
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
 
         // Check if search input is empty
         if (!search.trim()) {
             setError("Please enter a valid actor name.");
-            setActorImage(""); // Clear previous image
+            setActorImages([]); // Clear previous images
             return;
         }
 
         setError(""); // Clear any previous errors
 
-        // Call the TMDb API
-        fetch(`https://api.themoviedb.org/3/search/person?query=${search}&api_key=${API_KEY}`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Failed to fetch data from the API.");
+        try {
+            // Call the TMDb API to search for the actor
+            const response = await fetch(
+                `https://api.themoviedb.org/3/search/person?query=${search}&api_key=${API_KEY}`
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch data from the API.");
+            }
+            const data = await response.json();
+
+            // Check if there are any results
+            if (data.results && data.results.length > 0) {
+                const actor = data.results[0]; // Get the first actor from results
+
+                // Fetch additional images for the actor using their ID
+                const imageResponse = await fetch(
+                    `https://api.themoviedb.org/3/person/${actor.id}/images?api_key=${API_KEY}`
+                );
+                if (!imageResponse.ok) {
+                    throw new Error("Failed to fetch actor images.");
                 }
-                return response.json();
-            })
-            .then((data) => {
-                // Check if there are any results
-                if (data.results && data.results.length > 0) {
-                    const actor = data.results[0]; // Get the first actor from results
-                    if (actor.profile_path) {
-                        // Construct the image URL
-                        const imageUrl = `https://image.tmdb.org/t/p/w500${actor.profile_path}`;
-                        setActorImage(imageUrl);
-                    } else {
-                        setError("No image available for this actor.");
-                        setActorImage(""); // Clear previous image
-                    }
+                const imageData = await imageResponse.json();
+
+                // Extract profile images
+                if (imageData.profiles && imageData.profiles.length > 0) {
+                    const images = imageData.profiles.map(
+                        (profile) => `https://image.tmdb.org/t/p/w500${profile.file_path}`
+                    );
+                    setActorImages(images);
                 } else {
-                    setError("No actor found with that name.");
-                    setActorImage(""); // Clear previous image
+                    setError("No images available for this actor.");
+                    setActorImages([]);
                 }
-            })
-            .catch((err) => {
-                setError("An error occurred while fetching data.");
-                console.error(err);
-            });
+            } else {
+                setError("No actor found with that name.");
+                setActorImages([]);
+            }
+        } catch (err) {
+            setError("An error occurred while fetching data.");
+            console.error(err);
+        }
     };
 
     return (
@@ -285,10 +297,20 @@ function App() {
                 </button>
             </form>
             {error && <p style={{ color: "red" }}>{error}</p>}
-            {actorImage && <img src={actorImage} alt="Actor" style={{ width: "200px", borderRadius: "10px" }} />}
+            <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "10px" }}>
+                {actorImages.map((image, index) => (
+                    <img
+                        key={index}
+                        src={image}
+                        alt={`Actor ${index + 1}`}
+                        style={{ width: "200px", borderRadius: "10px" }}
+                    />
+                ))}
+            </div>
         </div>
     );
 }
 
 export default App;
+
 

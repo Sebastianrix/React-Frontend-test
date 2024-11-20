@@ -223,13 +223,13 @@ function App() {
     const [search, setSearch] = useState(""); // State for the search input
     const [actorImages, setActorImages] = useState([]); // State for the actor's images
     const [error, setError] = useState(""); // State for error messages
+    const [darkMode, setDarkMode] = useState(false); // State for dark mode
 
     const API_KEY = "003b3d8750e2856a2fc6e6414311d7eb";
 
     const handleSearch = async (e) => {
         e.preventDefault();
 
-        // Check if search input is empty
         if (!search.trim()) {
             setError("Please enter a valid actor name.");
             setActorImages([]); // Clear previous images
@@ -239,7 +239,6 @@ function App() {
         setError(""); // Clear any previous errors
 
         try {
-            // Call the TMDb API to search for the actor
             const response = await fetch(
                 `https://api.themoviedb.org/3/search/person?query=${search}&api_key=${API_KEY}`
             );
@@ -248,11 +247,9 @@ function App() {
             }
             const data = await response.json();
 
-            // Check if there are any results
             if (data.results && data.results.length > 0) {
-                const actor = data.results[0]; // Get the first actor from results
+                const actor = data.results[0];
 
-                // Fetch additional images for the actor using their ID
                 const imageResponse = await fetch(
                     `https://api.themoviedb.org/3/person/${actor.id}/images?api_key=${API_KEY}`
                 );
@@ -261,7 +258,6 @@ function App() {
                 }
                 const imageData = await imageResponse.json();
 
-                // Extract profile images
                 if (imageData.profiles && imageData.profiles.length > 0) {
                     const images = imageData.profiles.map(
                         (profile) => `https://image.tmdb.org/t/p/w500${profile.file_path}`
@@ -281,8 +277,35 @@ function App() {
         }
     };
 
+    const toggleDarkMode = () => {
+        setDarkMode(!darkMode);
+    };
+
     return (
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <div
+            style={{
+                textAlign: "center",
+                marginTop: "20px",
+                backgroundColor: darkMode ? "#121212" : "#f5f5f5",
+                color: darkMode ? "#ffffff" : "#000000",
+                minHeight: "100vh",
+                padding: "20px",
+            }}
+        >
+            <button
+                onClick={toggleDarkMode}
+                style={{
+                    padding: "10px 20px",
+                    backgroundColor: darkMode ? "#333333" : "#dddddd",
+                    color: darkMode ? "#ffffff" : "#000000",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    marginBottom: "20px",
+                }}
+            >
+                Toggle {darkMode ? "Light" : "Dark"} Mode
+            </button>
             <h1>Actor Search</h1>
             <form onSubmit={handleSearch} style={{ marginBottom: "20px" }}>
                 <input
@@ -290,9 +313,27 @@ function App() {
                     placeholder="Enter actor's name"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    style={{ padding: "10px", width: "300px" }}
+                    style={{
+                        padding: "10px",
+                        width: "300px",
+                        backgroundColor: darkMode ? "#333333" : "#ffffff",
+                        color: darkMode ? "#ffffff" : "#000000",
+                        border: "1px solid",
+                        borderColor: darkMode ? "#555555" : "#cccccc",
+                    }}
                 />
-                <button type="submit" style={{ padding: "10px 20px", marginLeft: "10px" }}>
+                <button
+                    type="submit"
+                    style={{
+                        padding: "10px 20px",
+                        marginLeft: "10px",
+                        backgroundColor: darkMode ? "#555555" : "#007bff",
+                        color: darkMode ? "#ffffff" : "#ffffff",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                    }}
+                >
                     Search
                 </button>
             </form>
